@@ -7,6 +7,8 @@ import com.alibaba.android.vlayout.LayoutHelper;
 import com.alibaba.android.vlayout.RecyclablePagerAdapter;
 import com.alibaba.android.vlayout.VirtualLayoutManager;
 import com.alibaba.android.vlayout.VirtualLayoutManager.LayoutParams;
+import com.alibaba.android.vlayout.customadapter.LoadInter;
+import com.alibaba.android.vlayout.customadapter.LoadMoreAdapter;
 import com.alibaba.android.vlayout.extend.LayoutManagerCanScrollListener;
 import com.alibaba.android.vlayout.extend.PerformanceMonitor;
 import com.alibaba.android.vlayout.extend.ViewLifeCycleListener;
@@ -48,27 +50,28 @@ import android.widget.TextView;
 import java.util.ArrayList;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.Random;
 
 /**
  * @author villadora
  */
 public class VLayoutActivity extends Activity {
 
-    private static final boolean BANNER_LAYOUT = true;
+    private static final boolean BANNER_LAYOUT = false;
 
-    private static final boolean FIX_LAYOUT = true;
+    private static final boolean FIX_LAYOUT = false;
 
-    private static final boolean LINEAR_LAYOUT = true;
+    private static final boolean LINEAR_LAYOUT = false;
 
-    private static final boolean SINGLE_LAYOUT = true;
+    private static final boolean SINGLE_LAYOUT = false;
 
-    private static final boolean FLOAT_LAYOUT = true;
+    private static final boolean FLOAT_LAYOUT = false;
 
-    private static final boolean ONEN_LAYOUT = true;
+    private static final boolean ONEN_LAYOUT = false;
 
-    private static final boolean COLUMN_LAYOUT = true;
+    private static final boolean COLUMN_LAYOUT = false;
 
-    private static final boolean GRID_LAYOUT = true;
+    private static final boolean GRID_LAYOUT = false;
 
     private static final boolean STICKY_LAYOUT = true;
 
@@ -90,8 +93,8 @@ public class VLayoutActivity extends Activity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.main_activity);
 
-        mSwipeRefreshLayout = (SwipeRefreshLayout) findViewById(R.id.swipe_container);
-        ;
+
+//        mSwipeRefreshLayout = (SwipeRefreshLayout) findViewById(R.id.swipe_container);
         mFirstText = (TextView) findViewById(R.id.first);
         mLastText = (TextView) findViewById(R.id.last);
         mCountText = (TextView) findViewById(R.id.count);
@@ -305,10 +308,11 @@ public class VLayoutActivity extends Activity {
             layoutHelper.setMargin(15, 50, 15, 150);
             layoutHelper.setHGap(10);
             layoutHelper.setVGap(10);
+            layoutHelper.setAutoExpand(true);
             GridRangeStyle rangeStyle = new GridRangeStyle();
             rangeStyle.setBgColor(Color.RED);
-            rangeStyle.setSpanCount(2);
-            rangeStyle.setWeights(new float[]{46.665f});
+//            rangeStyle.setSpanCount(1);
+            rangeStyle.setWeights(new float[]{100/4});
             rangeStyle.setPadding(15, 15, 15, 15);
             rangeStyle.setMargin(15, 15, 15, 15);
             rangeStyle.setHGap(5);
@@ -382,7 +386,7 @@ public class VLayoutActivity extends Activity {
 
         if (STICKY_LAYOUT) {
             StickyLayoutHelper layoutHelper = new StickyLayoutHelper();
-            //layoutHelper.setOffset(100);
+//            layoutHelper.setOffset(100);
             layoutHelper.setAspectRatio(4);
             adapters.add(new SubAdapter(this, layoutHelper, 1, new LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, 100)));
         }
@@ -647,9 +651,10 @@ public class VLayoutActivity extends Activity {
         if (GRID_LAYOUT) {
             // adapters.add(new SubAdapter(this, new GridLayoutHelper(4), 24));
         }
+        final FooterAdapter footerAdapter = new FooterAdapter(recyclerView, VLayoutActivity.this, new GridLayoutHelper(1), 1);
+//        adapters.add(footerAdapter);
 
-        adapters.add(
-                new FooterAdapter(recyclerView, VLayoutActivity.this, new GridLayoutHelper(1), 1));
+
 
         delegateAdapter.setAdapters(adapters);
 
@@ -693,18 +698,15 @@ public class VLayoutActivity extends Activity {
 
         mainHandler.postDelayed(trigger, 1000);
 
-        mSwipeRefreshLayout.setOnRefreshListener(new OnRefreshListener() {
+
+        setListenerToRootView();
+
+        findViewById(R.id.bt).setOnClickListener(new View.OnClickListener() {
             @Override
-            public void onRefresh() {
-                mainHandler.postDelayed(new Runnable() {
-                    @Override
-                    public void run() {
-                        mSwipeRefreshLayout.setRefreshing(false);
-                    }
-                }, 2000L);
+            public void onClick(View v) {
+                footerAdapter.notifyDataSetChanged();
             }
         });
-        setListenerToRootView();
     }
 
     boolean isOpened = false;
@@ -741,7 +743,7 @@ public class VLayoutActivity extends Activity {
         private LayoutParams mLayoutParams;
         private int mCount = 0;
 
-        private boolean showFooter = false;
+        private boolean showFooter = true;
 
         public FooterAdapter(RecyclerView recyclerView, Context context, LayoutHelper layoutHelper, int count) {
             this(recyclerView, context, layoutHelper, count, new LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, 300));
@@ -757,7 +759,9 @@ public class VLayoutActivity extends Activity {
 
         @Override
         public int getItemViewType(int position) {
-            return 100;
+            int i = new Random().nextInt(20);
+//            Log.i("======","===getItemViewType==="+i);
+            return i;
         }
 
         @Override
@@ -767,9 +771,9 @@ public class VLayoutActivity extends Activity {
 
         @Override
         public MainViewHolder onCreateViewHolder(ViewGroup parent, int viewType) {
+//            Log.i("======","===onCreateViewHolder==="+viewType);
             return new MainViewHolder(LayoutInflater.from(mContext).inflate(R.layout.item, parent, false));
         }
-
         @Override
         public void onBindViewHolder(MainViewHolder holder, int position) {
             LayoutParams lp = (LayoutParams) holder.itemView.getLayoutParams();
@@ -784,11 +788,15 @@ public class VLayoutActivity extends Activity {
 
         @Override
         protected void onBindViewHolderWithOffset(MainViewHolder holder, int position, int offsetTotal) {
-            ((TextView) holder.itemView.findViewById(R.id.title)).setText(Integer.toString(offsetTotal));
+//            Log.i("======",position+"===FooterAdapter==="+offsetTotal);
+            ((TextView) holder.itemView.findViewById(R.id.title)).setText("FooterAdapter"+Integer.toString(offsetTotal));
         }
+
+
 
         @Override
         public int getItemCount() {
+//            Log.i("======","===getItemCount==="+mCount);
             return mCount;
         }
 
@@ -882,6 +890,7 @@ public class VLayoutActivity extends Activity {
         public int getItemCount() {
             return mCount;
         }
+
     }
 
 
