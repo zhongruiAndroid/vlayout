@@ -652,7 +652,7 @@ public class VLayoutActivity extends Activity {
             // adapters.add(new SubAdapter(this, new GridLayoutHelper(4), 24));
         }
         final FooterAdapter footerAdapter = new FooterAdapter(recyclerView, VLayoutActivity.this, new GridLayoutHelper(1), 1);
-//        adapters.add(footerAdapter);
+        adapters.add(footerAdapter);
 
 
 
@@ -759,9 +759,9 @@ public class VLayoutActivity extends Activity {
 
         @Override
         public int getItemViewType(int position) {
-            int i = new Random().nextInt(20);
+//            int i = new Random().nextInt(20);
 //            Log.i("======","===getItemViewType==="+i);
-            return i;
+            return 0;
         }
 
         @Override
@@ -771,7 +771,7 @@ public class VLayoutActivity extends Activity {
 
         @Override
         public MainViewHolder onCreateViewHolder(ViewGroup parent, int viewType) {
-//            Log.i("======","===onCreateViewHolder==="+viewType);
+            Log.i("======","===onCreateViewHolder==="+viewType);
             return new MainViewHolder(LayoutInflater.from(mContext).inflate(R.layout.item, parent, false));
         }
         @Override
@@ -788,7 +788,7 @@ public class VLayoutActivity extends Activity {
 
         @Override
         protected void onBindViewHolderWithOffset(MainViewHolder holder, int position, int offsetTotal) {
-//            Log.i("======",position+"===FooterAdapter==="+offsetTotal);
+            Log.i("======",position+"===FooterAdapter==="+offsetTotal);
             ((TextView) holder.itemView.findViewById(R.id.title)).setText("FooterAdapter"+Integer.toString(offsetTotal));
         }
 

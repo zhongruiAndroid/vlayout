@@ -2,6 +2,8 @@ package com.alibaba.android.vlayout.customadapter;
 
 import android.content.Context;
 import android.graphics.Color;
+import android.os.Handler;
+import android.os.Looper;
 import android.support.annotation.ColorInt;
 import android.support.annotation.IntDef;
 import android.support.annotation.NonNull;
@@ -19,11 +21,13 @@ import com.alibaba.android.vlayout.layout.RangeGridLayoutHelper;
 import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
 import java.util.Calendar;
+import java.util.List;
 
 /***
  *   created by android on 2019/4/29
  */
 public abstract class LoadMoreAdapter<T> extends CustomAdapter<T> {
+    private Handler handler;
     private long click_interval = 900; // 阻塞时间间隔
     private long lastClickTime;
 
@@ -53,6 +57,10 @@ public abstract class LoadMoreAdapter<T> extends CustomAdapter<T> {
     private int loadViewHeight = 40;
 
     private int bottomViewBackground = Color.TRANSPARENT;
+
+    /*是否请求完成，防止上滑下滑重复触发请求*/
+    private boolean isEndRequest = true;
+
     /*回调方法,触发加载更多*/
     public OnLoadMoreListener onLoadMoreListener;
     public interface OnLoadMoreListener {
@@ -73,6 +81,7 @@ public abstract class LoadMoreAdapter<T> extends CustomAdapter<T> {
         if(layoutHelper instanceof RangeGridLayoutHelper){
             if(isHiddenPromptView==false){
                 RangeGridLayoutHelper.GridRangeStyle gridRangeStyle = new RangeGridLayoutHelper.GridRangeStyle();
+                /*如果是表格布局，设置负责加载提示的view一列显示*/
                 gridRangeStyle.setSpanCount(1);
                 ((RangeGridLayoutHelper) layoutHelper).addRangeStyle(getDataCount(),getDataCount(),gridRangeStyle);
             }
@@ -150,14 +159,26 @@ public abstract class LoadMoreAdapter<T> extends CustomAdapter<T> {
     }
 
     private void loadMoreData(){
-        if(onLoadMoreListener!=null){
-            onLoadMoreListener.loadMore(new LoadInter() {
+        if(isEndRequest&&onLoadMoreListener!=null){
+            getHandler().post(new Runnable() {
                 @Override
-                public void result(int status) {
-                    setStatus(status);
+                public void run() {
+                    isEndRequest=false;
+                    onLoadMoreListener.loadMore(new LoadInter() {
+                        @Override
+                        public void result(int status) {
+                            setStatus(status);
+                        }
+                    });
                 }
             });
         }
+    }
+    private Handler getHandler(){
+        if(handler==null){
+            handler=new Handler(Looper.getMainLooper());
+        }
+        return handler;
     }
 
     public View getLoadView() {
@@ -222,16 +243,33 @@ public abstract class LoadMoreAdapter<T> extends CustomAdapter<T> {
         return status;
     }
 
+    @Override
+    public void setList(List<T> list, boolean isNotifyData) {
+        completeRequest();
+        super.setList(list, isNotifyData);
+    }
+
+    @Override
+    public void addList(List<T> list, boolean isNotifyData) {
+        completeRequest();
+        super.addList(list, isNotifyData);
+    }
+
     public void setStatus(@Status int status) {
         setStatus(status,true);
     }
     public void setStatus(@Status int status,boolean isNotify) {
+        completeRequest();
         this.status = status;
         if(isNotify){
             notifyDataSetChanged();
         }
     }
 
+    /*设置请求完成*/
+    private void completeRequest(){
+        isEndRequest=true;
+    }
     public void setLoadView(View loadView) {
         this.loadView = loadView;
     }
@@ -292,4 +330,5 @@ public abstract class LoadMoreAdapter<T> extends CustomAdapter<T> {
     public int getBottomViewBackground() {
         return bottomViewBackground;
     }
+
 }

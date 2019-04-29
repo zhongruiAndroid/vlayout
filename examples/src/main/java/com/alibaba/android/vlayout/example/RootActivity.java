@@ -18,7 +18,8 @@ public class RootActivity extends ListActivity {
             MainActivity.class.getSimpleName(),
             TestActivity.class.getSimpleName(),
             OnePlusNLayoutActivity.class.getSimpleName(),
-            DebugActivity.class.getSimpleName()
+            DebugActivity.class.getSimpleName(),
+            CustomAdapterActivity.class.getSimpleName()
     };
 
     private Class[] mActivities = new Class[]{
@@ -26,7 +27,8 @@ public class RootActivity extends ListActivity {
             MainActivity.class,
             TestActivity.class,
             OnePlusNLayoutActivity.class,
-            DebugActivity.class
+            DebugActivity.class,
+            CustomAdapterActivity.class
     };
 
     @Override

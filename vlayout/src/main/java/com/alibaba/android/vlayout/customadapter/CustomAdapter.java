@@ -125,7 +125,7 @@ public abstract class CustomAdapter<T> extends DelegateAdapter.Adapter<CustomVie
 
     public void addList(List<T> list, boolean isNotifyData) {
         if (this.mList == null) {
-            this.mList = new ArrayList<>();
+            this.mList = Collections.emptyList();
         }
         if (list != null) {
             this.mList.addAll(list);
