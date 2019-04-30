@@ -98,8 +98,8 @@ public class LoadMoreActivity extends AppCompatActivity {
                 return list;
             }
         });
-//        RangeGridLayoutHelper helper=new RangeGridLayoutHelper(4);
-        StaggeredGridLayoutHelper helper=new StaggeredGridLayoutHelper(4);
+        RangeGridLayoutHelper helper=new RangeGridLayoutHelper(4);
+//        StaggeredGridLayoutHelper helper=new StaggeredGridLayoutHelper(4);
 //        GridLayoutHelper helper=new GridLayoutHelper(4);
         adapter.setLayoutHelper(helper);
         List<String> list=new ArrayList<>();
@@ -110,9 +110,10 @@ public class LoadMoreActivity extends AppCompatActivity {
         delegateAdapter.addAdapter(adapter);
 
 //        rv.setLayoutManager(new GridLayoutManager(this,4));
-        rv.setLayoutManager(new LinearLayoutManager(this));
-//        rv.setLayoutManager(new StaggeredGridLayoutManager(4,StaggeredGridLayoutManager.VERTICAL));
-        rv.addItemDecoration(new BaseDividerListItem(this,15,R.color.design_default_color_primary));
+//        rv.setLayoutManager(new LinearLayoutManager(this));
+//        rv.setLayoutManager(virtualLayoutManager);
+        rv.setLayoutManager(new StaggeredGridLayoutManager(4,StaggeredGridLayoutManager.VERTICAL));
+//        rv.addItemDecoration(new BaseDividerListItem(this,15,R.color.design_default_color_primary));
 //        rv.addItemDecoration(new BaseDividerGridItem(this,15,R.color.design_default_color_primary));
         rv.setAdapter(adapter);
     }
