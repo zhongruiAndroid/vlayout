@@ -36,7 +36,9 @@
             android:layout_weight="1"
             android:layout_height="wrap_content"
             android:text="complete"
+            android:gravity="center"
             android:textAllCaps="false"
+            android:background="@drawable/aa"
             />
     </LinearLayout>
 
