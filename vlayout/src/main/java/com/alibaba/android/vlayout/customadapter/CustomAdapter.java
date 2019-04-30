@@ -129,9 +129,9 @@ public abstract class CustomAdapter<T> extends DelegateAdapter.Adapter<CustomVie
         }
         if (list != null) {
             this.mList.addAll(list);
-            if (isNotifyData) {
-                notifyDataSetChanged();
-            }
+        }
+        if (isNotifyData) {
+            notifyDataSetChanged();
         }
     }
 

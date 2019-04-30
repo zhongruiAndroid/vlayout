@@ -7,7 +7,9 @@ import android.os.Looper;
 import android.support.annotation.ColorInt;
 import android.support.annotation.IntDef;
 import android.support.annotation.NonNull;
+import android.support.v7.widget.GridLayoutManager;
 import android.support.v7.widget.RecyclerView;
+import android.support.v7.widget.StaggeredGridLayoutManager;
 import android.view.Gravity;
 import android.view.View;
 import android.view.ViewGroup;
@@ -17,6 +19,7 @@ import com.alibaba.android.vlayout.LayoutHelper;
 import com.alibaba.android.vlayout.layout.DefaultLayoutHelper;
 import com.alibaba.android.vlayout.layout.GridLayoutHelper;
 import com.alibaba.android.vlayout.layout.RangeGridLayoutHelper;
+import com.alibaba.android.vlayout.layout.StaggeredGridLayoutHelper;
 
 import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
@@ -30,6 +33,7 @@ public abstract class LoadMoreAdapter<T> extends CustomAdapter<T> {
     private Handler handler;
     private long click_interval = 900; // 阻塞时间间隔
     private long lastClickTime;
+    private int pageSize;
 
 //    private LayoutHelper layoutHelper;
     private View loadView;
@@ -74,22 +78,46 @@ public abstract class LoadMoreAdapter<T> extends CustomAdapter<T> {
     public LayoutHelper getLayoutHelper() {
         return setLastViewStyle(super.getLayoutHelper());
     }
+
+    @Override
+    public void setLayoutHelper(LayoutHelper layoutHelper) {
+        super.setLayoutHelper(layoutHelper);
+        setLastViewStyle(this.layoutHelper);
+    }
+
     private LayoutHelper setLastViewStyle(LayoutHelper layoutHelper){
-        if(layoutHelper==null){
-            return null;
+        if(layoutHelper==null||hasLoadMore()==false){
+            return layoutHelper;
+        }
+        if(layoutHelper instanceof GridLayoutHelper){
+            final GridLayoutHelper gridLayoutHelper = (GridLayoutHelper) layoutHelper;
+            gridLayoutHelper.setSpanSizeLookup(getSpanSizeLookup(gridLayoutHelper.getSpanCount()));
+            return layoutHelper;
         }
         if(layoutHelper instanceof RangeGridLayoutHelper){
-            if(isHiddenPromptView==false){
-                RangeGridLayoutHelper.GridRangeStyle gridRangeStyle = new RangeGridLayoutHelper.GridRangeStyle();
-                /*如果是表格布局，设置负责加载提示的view一列显示*/
-                gridRangeStyle.setSpanCount(1);
-                ((RangeGridLayoutHelper) layoutHelper).addRangeStyle(getDataCount(),getDataCount(),gridRangeStyle);
-            }
+            RangeGridLayoutHelper r = (RangeGridLayoutHelper) layoutHelper;
+            r.setSpanSizeLookup(getSpanSizeLookup(r.getSpanCount()));
+            return layoutHelper;
         }
         return layoutHelper;
     }
-    public LoadMoreAdapter(int layoutId) {
+
+    @NonNull
+    private GridLayoutHelper.SpanSizeLookup getSpanSizeLookup(final int spanCount) {
+        return new GridLayoutHelper.SpanSizeLookup() {
+            @Override
+            public int getSpanSize(int position) {
+                if(position==getItemCount()-1&&getDataCount()<getItemCount()){
+                    return spanCount;
+                }
+                return 1;
+            }
+        };
+    }
+
+    public LoadMoreAdapter(int layoutId, int pageSize) {
         super(layoutId);
+        this.pageSize=pageSize;
         loadView=getLoadView();
         errorView=getErrorView();
         noMoreView=getNoMoreView();
@@ -122,9 +150,11 @@ public abstract class LoadMoreAdapter<T> extends CustomAdapter<T> {
                         long currentTime = Calendar.getInstance().getTimeInMillis();
                         long interval=currentTime-lastClickTime;
                         if(interval>=click_interval){
-                            loadMoreData();
-                            lastClickTime=currentTime;
+                            //改变状态会触发加载，所以这里不需要手动调用
+                            setStatus(load);
+//                            loadMoreData();
                         }
+                        lastClickTime=currentTime;
                     }
                 });
             }
@@ -137,18 +167,21 @@ public abstract class LoadMoreAdapter<T> extends CustomAdapter<T> {
 
     @Override
     public void onBindViewHolder(@NonNull CustomViewHolder viewHolder, int position) {
-        if (isLoadMoreView(getItemViewType(position))) {
+        if (getItemViewType(position)==load) {
             loadMoreData();
-        }else{
-            super.onBindViewHolder(viewHolder,position);
+            return;
         }
+        if(isLoadMoreView(getItemViewType(position))){
+            return;
+        }
+        super.onBindViewHolder(viewHolder,position);
     }
     public int getDataCount(){
         return super.getItemCount();
     }
     @Override
     public int getItemCount() {
-        if(isHiddenPromptView&&noMore==status){
+        if(isHiddenPromptView&&noMore==status||hasLoadMore()==false){
             return super.getItemCount();
         }
         return super.getItemCount()+1;
@@ -244,15 +277,33 @@ public abstract class LoadMoreAdapter<T> extends CustomAdapter<T> {
     }
 
     @Override
+    public void setList(List<T> list) {
+        judgeHasMore(list);
+        super.setList(list);
+    }
+    @Override
     public void setList(List<T> list, boolean isNotifyData) {
-        completeRequest();
+        judgeHasMore(list);
         super.setList(list, isNotifyData);
     }
 
     @Override
+    public void addList(List<T> list) {
+        judgeHasMore(list);
+        super.addList(list);
+    }
+    @Override
     public void addList(List<T> list, boolean isNotifyData) {
-        completeRequest();
+        judgeHasMore(list);
         super.addList(list, isNotifyData);
+    }
+
+    private void judgeHasMore(List<T> list){
+        if(list==null||list.size()<pageSize){
+            setStatus(noMore,false);
+        }else{
+            completeRequest();
+        }
     }
 
     public void setStatus(@Status int status) {
@@ -262,7 +313,8 @@ public abstract class LoadMoreAdapter<T> extends CustomAdapter<T> {
         completeRequest();
         this.status = status;
         if(isNotify){
-            notifyDataSetChanged();
+//            notifyDataSetChanged();
+            notifyItemChanged(getItemCount()-1);
         }
     }
 
@@ -284,7 +336,6 @@ public abstract class LoadMoreAdapter<T> extends CustomAdapter<T> {
 
     public void setHiddenPromptView(boolean hiddenPromptView) {
         isHiddenPromptView = hiddenPromptView;
-        setLastViewStyle(getLayoutHelper());
     }
 
     public void setLoadViewText(String loadViewText) {
@@ -329,6 +380,47 @@ public abstract class LoadMoreAdapter<T> extends CustomAdapter<T> {
 
     public int getBottomViewBackground() {
         return bottomViewBackground;
+    }
+
+    private boolean hasLoadMore(){
+        return onLoadMoreListener!=null;
+    }
+
+    @Override
+    public void onAttachedToRecyclerView(RecyclerView recyclerView) {
+        super.onAttachedToRecyclerView(recyclerView);
+        final RecyclerView.LayoutManager layoutManager = recyclerView.getLayoutManager();
+        if (layoutManager instanceof GridLayoutManager) {
+            final GridLayoutManager gridLayoutManager = (GridLayoutManager) layoutManager;
+            final GridLayoutManager.SpanSizeLookup spanSizeLookup = gridLayoutManager.getSpanSizeLookup();
+            gridLayoutManager.setSpanSizeLookup(new GridLayoutManager.SpanSizeLookup() {
+                @Override
+                public int getSpanSize(int position) {
+                    int viewType = getItemViewType(position);
+                    if(isLoadMoreView(viewType)){
+                        return gridLayoutManager.getSpanCount();
+                    }
+                    if (spanSizeLookup != null) {
+                        return spanSizeLookup.getSpanSize(position);
+                    }
+                    return 1;
+                }
+            });
+        }
+    }
+
+    @Override
+    public void onViewAttachedToWindow(@NonNull CustomViewHolder holder) {
+        super.onViewAttachedToWindow(holder);
+        //如果不显示底部布局
+        if(hasLoadMore()==false||getDataCount()>=getItemCount()||holder.getAdapterPosition()!=getItemCount()-1){
+            return;
+        }
+        ViewGroup.LayoutParams layoutParams = holder.itemView.getLayoutParams();
+        if (layoutParams != null && layoutParams instanceof StaggeredGridLayoutManager.LayoutParams) {
+            StaggeredGridLayoutManager.LayoutParams sglm = (StaggeredGridLayoutManager.LayoutParams) layoutParams;
+            sglm.setFullSpan(true);
+        }
     }
 
 }

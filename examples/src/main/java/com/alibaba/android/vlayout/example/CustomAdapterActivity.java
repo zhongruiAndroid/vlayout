@@ -4,11 +4,13 @@ import android.graphics.Color;
 import android.support.annotation.NonNull;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
+import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
 
 import com.alibaba.android.vlayout.DelegateAdapter;
 import com.alibaba.android.vlayout.LayoutHelper;
 import com.alibaba.android.vlayout.VirtualLayoutManager;
+import com.alibaba.android.vlayout.customadapter.BaseDividerListItem;
 import com.alibaba.android.vlayout.customadapter.CustomAdapter;
 import com.alibaba.android.vlayout.customadapter.CustomViewHolder;
 import com.alibaba.android.vlayout.layout.LinearLayoutHelper;
@@ -43,6 +45,7 @@ public class CustomAdapterActivity extends AppCompatActivity {
 
         delegateAdapter.addAdapter(customAdapter);
         rv.setLayoutManager(new VirtualLayoutManager(this));
+        rv.addItemDecoration(new BaseDividerListItem(this,15,R.color.design_default_color_primary));
         rv.setAdapter(delegateAdapter);
     }
 }
