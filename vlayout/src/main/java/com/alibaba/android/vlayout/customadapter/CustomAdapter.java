@@ -75,6 +75,7 @@ public abstract class CustomAdapter<T> extends DelegateAdapter.Adapter<CustomVie
         }else{
             holder = new CustomViewHolder(mInflater.inflate(layoutId, viewGroup, false));
         }
+        holder.isContentView=true;
         setItemFastClickListener(holder);
         setItemClickListener(holder);
         setItemLongClickListener(holder);
