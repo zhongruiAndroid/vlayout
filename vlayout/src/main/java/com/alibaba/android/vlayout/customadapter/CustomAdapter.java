@@ -154,6 +154,10 @@ public abstract class CustomAdapter<T> extends DelegateAdapter.Adapter<CustomVie
     }
 
 
+    public void setOnItemFastClickListener(OnItemFastClickListener mFastClickListener) {
+        this.mFastClickListener = mFastClickListener;
+    }
+
     public void setOnItemClickListener(OnItemClickListener listener) {
         mClickListener = listener;
     }
