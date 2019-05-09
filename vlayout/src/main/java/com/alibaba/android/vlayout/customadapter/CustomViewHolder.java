@@ -16,6 +16,8 @@ import android.widget.TextView;
 public class CustomViewHolder extends RecyclerView.ViewHolder{
     private SparseArrayCompat<View> sparseView;
     public boolean isContentView;
+    public boolean isHeaderView;
+    public boolean isFooterView;
 
     public CustomViewHolder(@NonNull View itemView) {
         super(itemView);

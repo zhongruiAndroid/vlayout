@@ -2,6 +2,7 @@ package com.alibaba.android.vlayout.customadapter;
 
 import android.content.Context;
 import android.support.annotation.NonNull;
+import android.support.v4.util.SparseArrayCompat;
 import android.support.v7.widget.RecyclerView;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -22,6 +23,32 @@ import java.util.List;
  *   created by android on 2019/4/29
  */
 public abstract class CustomAdapter<T> extends DelegateAdapter.Adapter<CustomViewHolder> {
+    public interface OnItemClickListener {
+        public void onItemClick(View itemView, int position);
+    }
+    public interface OnItemLongClickListener {
+        public void onItemLongClick(View itemView, int position);
+    }
+    public interface OnItemFastClickListener {
+        public void onItemFastClick(View itemView, int position);
+    }
+    /********************************header********************************/
+    public interface OnHeaderClickListener {
+        public void onHeaderClick(View itemView, int position);
+    }
+    public interface OnHeaderLongClickListener {
+        public void onHeaderLongClick(View itemView, int position);
+    }
+    /********************************footer********************************/
+    public interface OnFooterClickListener {
+        public void onFooterClick(View itemView, int position);
+    }
+    public interface OnFooterLongClickListener {
+        public void onFooterLongClick(View itemView, int position);
+    }
+
+    protected LayoutHelper layoutHelper=new LinearLayoutHelper();
+
     protected List<T> mList;
     protected LayoutInflater mInflater;
     protected int layoutId;
@@ -32,12 +59,19 @@ public abstract class CustomAdapter<T> extends DelegateAdapter.Adapter<CustomVie
     protected OnItemClickListener mClickListener;
     protected OnItemLongClickListener mLongClickListener;
 
-    protected LayoutHelper layoutHelper=new LinearLayoutHelper();
 
-    /**
-     * 假数据测试设置list大小
-     **/
-    protected int testListSize = 0;
+    private final int header_view = 10000;
+    private final int footer_view = 20000;
+    protected SparseArrayCompat<View> headerView;
+    protected SparseArrayCompat<View> footerView;
+
+
+    protected OnHeaderClickListener mHeaderClickListener;
+    protected OnHeaderLongClickListener mHeaderLongClickListener;
+    protected OnFooterClickListener mFooterClickListener;
+    protected OnFooterLongClickListener mFooterLongClickListener;
+
+
 
 
     public abstract void bindData(CustomViewHolder holder, int position, T item);
@@ -64,11 +98,45 @@ public abstract class CustomAdapter<T> extends DelegateAdapter.Adapter<CustomVie
     }
 
     @Override
+    public int getItemViewType(int position) {
+        if(isHeaderViewPos(position)){
+            return headerView.keyAt(position);
+        }
+        if(isFooterViewPos(position)){
+            return footerView.keyAt(position-getHeaderCount()-getDataCount());
+        }
+        return super.getItemViewType(position);
+    }
+
+    @Override
     public CustomViewHolder onCreateViewHolder(@NonNull ViewGroup viewGroup, int viewType) {
+        CustomViewHolder holder;
         if (mInflater == null) {
             mInflater = LayoutInflater.from(viewGroup.getContext());
         }
-        CustomViewHolder holder;
+        /*添加头布局*/
+        if (this.headerView != null) {
+            View hView = this.headerView.get(viewType);
+            if(hView!=null){
+                holder=new CustomViewHolder(hView);
+                holder.isHeaderView=true;
+                setHeaderItemClick(holder);
+                setHeaderItemLongClick(holder);
+                return holder;
+            }
+        }
+        /*添加脚布局*/
+        if(this.footerView!=null){
+            View fView=this.footerView.get(viewType);
+            if(fView!=null){
+                holder=new CustomViewHolder(fView);
+                holder.isFooterView=true;
+                setFooterItemClick(holder);
+                setFooterItemLongClick(holder);
+                return holder;
+            }
+        }
+
         View customView = getCustomView();
         if(customView!=null){
             holder = new CustomViewHolder(customView);
@@ -93,16 +161,64 @@ public abstract class CustomAdapter<T> extends DelegateAdapter.Adapter<CustomVie
 
     @Override
     public int getItemCount() {
-        if (testListSize > 0) {
-            return testListSize;
-        } else {
-            return mList == null ? 0 : mList.size();
-        }
+        int otherSize = getLoadMoreViewCount() + getHeaderCount() + getFooterCount();
+        return mList == null ? otherSize : mList.size()+otherSize;
+    }
+    public int getDataCount(){
+        return mList == null ? 0 : mList.size();
+    }
+    public int getLoadMoreViewCount() {
+        return 0;
     }
 
+    /*****************************headerView*******************************/
+    public void addHeaderView(View view) {
+        if(headerView==null){
+            headerView=new SparseArrayCompat<>();
+        }
+        headerView.put(headerView.size() + header_view, view);
+    }
+    public boolean isHeaderViewPos(int position) {
+        return position < getHeaderCount();
+    }
+    public int getHeaderCount() {
+        return headerView== null ? 0 : headerView.size();
+    }
+    public SparseArrayCompat<View> getHeaderView() {
+        if(headerView==null){
+            headerView=new SparseArrayCompat<>();
+        }
+        return headerView;
+    }
+    public void setHeaderView(SparseArrayCompat<View> headerViewList) {
+        this.headerView = headerViewList;
+    }
 
-    public void setTestListSize(int testListSize) {
-        this.testListSize = testListSize;
+    /*****************************footerView*******************************/
+    public void addFooterView(View view) {
+        if(footerView==null){
+            footerView=new SparseArrayCompat<>();
+        }
+        footerView.put(footerView.size() + footer_view, view);
+    }
+    public boolean isFooterViewPos(int position) {
+        if (position >= getHeaderCount()+getDataCount()&& position < getItemCount()-getLoadMoreViewCount()) {
+            return true;
+        } else {
+            return false;
+        }
+    }
+    public int getFooterCount() {
+        return footerView == null?0:footerView.size();
+    }
+    public SparseArrayCompat<View> getFooterView() {
+        if(footerView==null){
+            footerView=new SparseArrayCompat<>();
+        }
+        return footerView;
+    }
+    public void setFooterView(SparseArrayCompat<View> footerViewList) {
+        this.footerView = footerViewList;
     }
 
     public void setList(List<T> list) {
@@ -157,29 +273,74 @@ public abstract class CustomAdapter<T> extends DelegateAdapter.Adapter<CustomVie
     public void setOnItemFastClickListener(OnItemFastClickListener mFastClickListener) {
         this.mFastClickListener = mFastClickListener;
     }
-
     public void setOnItemClickListener(OnItemClickListener listener) {
         mClickListener = listener;
     }
-
     public void setOnItemLongClickListener(OnItemLongClickListener listener) {
         mLongClickListener = listener;
     }
 
-    public interface OnItemClickListener {
-        public void onItemClick(View itemView, int position);
+    public void setOnHeaderClickListener(OnHeaderClickListener listener) {
+        mHeaderClickListener = listener;
+    }
+    public void setOnHeaderLongClickListener(OnHeaderLongClickListener listener) {
+        mHeaderLongClickListener = listener;
+    }
+    public void setOnFooterClickListener(OnFooterClickListener listener) {
+        mFooterClickListener = listener;
+    }
+    public void setOnFooterLongClickListener(OnFooterLongClickListener listener) {
+        mFooterLongClickListener = listener;
     }
 
-    public interface OnItemLongClickListener {
-        public void onItemLongClick(View itemView, int position);
+
+    private void setHeaderItemClick(final CustomViewHolder holder){
+        if(mHeaderClickListener!=null&&holder.itemView!=null) {
+            holder.itemView.setOnClickListener(new View.OnClickListener() {
+                @Override
+                public void onClick(View v) {
+                    mHeaderClickListener.onHeaderClick(holder.itemView,holder.getAdapterPosition());
+                }
+            });
+        }
+    }
+    private void setHeaderItemLongClick(final CustomViewHolder holder){
+        if(mHeaderLongClickListener!=null&&holder.itemView!=null) {
+            holder.itemView.setOnLongClickListener(new View.OnLongClickListener() {
+                @Override
+                public boolean onLongClick(View v) {
+                    mHeaderLongClickListener.onHeaderLongClick(holder.itemView,holder.getAdapterPosition());
+                    return true;
+                }
+            });
+        }
     }
 
-    public interface OnItemFastClickListener {
-        public void onItemFastClick(View itemView, int position);
+    private void setFooterItemLongClick(final CustomViewHolder holder){
+        if(mFooterLongClickListener!=null&&holder.itemView!=null) {
+            holder.itemView.setOnLongClickListener(new View.OnLongClickListener() {
+                @Override
+                public boolean onLongClick(View v) {
+                    mFooterLongClickListener.onFooterLongClick(holder.itemView,holder.getAdapterPosition());
+                    return true;
+                }
+            });
+        }
     }
+    private void setFooterItemClick(final CustomViewHolder holder){
+        if(mFooterClickListener!=null&&holder.itemView!=null){
+            holder.itemView.setOnClickListener(new View.OnClickListener() {
+                @Override
+                public void onClick(View v) {
+                    mFooterClickListener.onFooterClick(holder.itemView,holder.getAdapterPosition());
+                }
+            });
+        }
+    }
+
 
     private void setItemFastClickListener(final CustomViewHolder holder) {
-        if (mFastClickListener != null) {
+        if (mFastClickListener != null&&holder.itemView!=null) {
             holder.itemView.setOnClickListener(new View.OnClickListener() {
                 @Override
                 public void onClick(View v) {
@@ -188,9 +349,8 @@ public abstract class CustomAdapter<T> extends DelegateAdapter.Adapter<CustomVie
             });
         }
     }
-
     private void setItemClickListener(final CustomViewHolder holder) {
-        if (mClickListener != null  ) {
+        if (mClickListener != null&&holder.itemView!=null) {
             holder.itemView.setOnClickListener(new View.OnClickListener() {
                 @Override
                 public void onClick(View v) {
@@ -204,9 +364,8 @@ public abstract class CustomAdapter<T> extends DelegateAdapter.Adapter<CustomVie
             });
         }
     }
-
     private void setItemLongClickListener(final CustomViewHolder holder) {
-        if (mLongClickListener != null) {
+        if (mLongClickListener != null&&holder.itemView!=null) {
             holder.itemView.setOnLongClickListener(new View.OnLongClickListener() {
                 @Override
                 public boolean onLongClick(View v) {
@@ -216,4 +375,5 @@ public abstract class CustomAdapter<T> extends DelegateAdapter.Adapter<CustomVie
             });
         }
     }
+
 }

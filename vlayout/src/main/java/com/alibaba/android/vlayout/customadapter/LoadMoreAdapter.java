@@ -181,7 +181,7 @@ public abstract class LoadMoreAdapter<T> extends CustomAdapter<T> {
     }
     @Override
     public int getItemCount() {
-        if(isHiddenPromptView&&noMore==status||hasLoadMore()==false){
+        if((isHiddenPromptView&&noMore==status)||hasLoadMore()==false){
             return super.getItemCount();
         }
         return super.getItemCount()+1;
@@ -265,6 +265,11 @@ public abstract class LoadMoreAdapter<T> extends CustomAdapter<T> {
         textView.setBackgroundColor(bottomViewBackground);
         textView.setText(text);
         return textView;
+    }
+
+    @Override
+    public int getLoadMoreViewCount() {
+        return getItemCount()>getDataCount()?1:0;
     }
 
     private int dp2px(Context context, float dipValue) {
