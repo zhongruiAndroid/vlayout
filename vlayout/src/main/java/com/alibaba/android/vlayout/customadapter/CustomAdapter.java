@@ -170,7 +170,7 @@ public abstract class CustomAdapter<T> extends DelegateAdapter.Adapter<CustomVie
             }
             return;
         }
-        if (mList == null || position >= mList.size()) {
+        if (mList == null || getDataPosition(position) >= mList.size()) {
             bindData(holder,getDataPosition(position), null);
         } else {
             bindData(holder,getDataPosition(position),mList.get(getDataPosition(position)));
