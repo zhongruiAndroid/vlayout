@@ -3,7 +3,9 @@ package com.alibaba.android.vlayout.customadapter;
 import android.content.Context;
 import android.support.annotation.NonNull;
 import android.support.v4.util.SparseArrayCompat;
+import android.support.v7.widget.GridLayoutManager;
 import android.support.v7.widget.RecyclerView;
+import android.support.v7.widget.StaggeredGridLayoutManager;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -203,6 +205,31 @@ public abstract class CustomAdapter<T> extends DelegateAdapter.Adapter<CustomVie
         }
         headerView.put(headerView.size() + header_view, view);
     }
+    public void removeHeaderView(int position){
+        removeHeaderView(position,false);
+    }
+    public void removeHeaderView(int position,boolean notify){
+        if (headerView == null) {
+            return;
+        }
+        headerView.removeAt(position);
+        if(notify){
+            notifyDataSetChanged();
+        }
+    }
+    public void removeHeaderView(View view ){
+        removeHeaderView(view,false);
+    }
+
+    public void removeHeaderView(View view ,boolean notify){
+        if (headerView == null) {
+            return;
+        }
+        if(headerView.containsValue(view)){
+            int index = headerView.indexOfValue(view);
+            removeHeaderView(index,notify);
+        }
+    }
 
     public boolean isHeaderViewPos(int position) {
         return position < getHeaderCount();
@@ -237,6 +264,31 @@ public abstract class CustomAdapter<T> extends DelegateAdapter.Adapter<CustomVie
         }
         footerView.put(footerView.size() + footer_view, view);
     }
+    public void removeFooterView(int position){
+        removeFooterView(position,false);
+    }
+    public void removeFooterView(int position,boolean notify){
+        if(footerView==null){
+            return;
+        }
+        footerView.removeAt(position);
+        if(notify){
+            notifyDataSetChanged();
+        }
+    }
+    public void removeFooterView(View view){
+        removeFooterView(view,false);
+    }
+    public void removeFooterView(View view,boolean notify){
+        if(footerView==null){
+            return;
+        }
+        if (footerView.containsValue(view)) {
+            int index = footerView.indexOfValue(view);
+            removeFooterView(index,notify);
+        }
+    }
+
 
     public boolean isFooterViewPos(int position) {
         if (position >= getHeaderCount() + getDataCount() && position < getItemCount() - getLoadMoreViewCount()) {
@@ -425,4 +477,41 @@ public abstract class CustomAdapter<T> extends DelegateAdapter.Adapter<CustomVie
         }
     }
 
+
+
+    @Override
+    public void onAttachedToRecyclerView(RecyclerView recyclerView) {
+        super.onAttachedToRecyclerView(recyclerView);
+        final RecyclerView.LayoutManager layoutManager = recyclerView.getLayoutManager();
+        if (layoutManager instanceof GridLayoutManager) {
+            final GridLayoutManager gridLayoutManager = (GridLayoutManager) layoutManager;
+            final GridLayoutManager.SpanSizeLookup spanSizeLookup = gridLayoutManager.getSpanSizeLookup();
+            gridLayoutManager.setSpanSizeLookup(new GridLayoutManager.SpanSizeLookup() {
+                @Override
+                public int getSpanSize(int position) {
+                    if(isHeaderViewPos(position)||isFooterViewPos(position)){
+                        return gridLayoutManager.getSpanCount();
+                    }
+                    if (spanSizeLookup != null) {
+                        return spanSizeLookup.getSpanSize(position);
+                    }
+                    return 1;
+                }
+            });
+        }
+    }
+
+    @Override
+    public void onViewAttachedToWindow(@NonNull CustomViewHolder holder) {
+        super.onViewAttachedToWindow(holder);
+        //如果不显示底部布局
+        if(isHeaderViewPos(holder.getAdapterPosition())||isFooterViewPos(holder.getAdapterPosition())){
+            ViewGroup.LayoutParams layoutParams = holder.itemView.getLayoutParams();
+            if (layoutParams != null && layoutParams instanceof StaggeredGridLayoutManager.LayoutParams) {
+                StaggeredGridLayoutManager.LayoutParams sglm = (StaggeredGridLayoutManager.LayoutParams) layoutParams;
+                sglm.setFullSpan(true);
+            }
+        }
+
+    }
 }
