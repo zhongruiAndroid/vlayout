@@ -107,7 +107,7 @@ public abstract class LoadMoreAdapter<T> extends CustomAdapter<T> {
         return new GridLayoutHelper.SpanSizeLookup() {
             @Override
             public int getSpanSize(int position) {
-                if(position==getItemCount()-1&&getDataCount()<getItemCount()){
+                if(position==getItemCount()-1&&getNotLoadViewCount()<getItemCount()){
                     return spanCount;
                 }
                 return 1;
@@ -133,7 +133,7 @@ public abstract class LoadMoreAdapter<T> extends CustomAdapter<T> {
 
     @Override
     public int getItemViewType(int position) {
-        if(position>= getDataCount()&&isHiddenPromptView==false){
+        if(position>= getNotLoadViewCount()&&isHiddenPromptView==false){
             return status;
         }
         return super.getItemViewType(position);
@@ -413,7 +413,7 @@ public abstract class LoadMoreAdapter<T> extends CustomAdapter<T> {
     public void onViewAttachedToWindow(@NonNull CustomViewHolder holder) {
         super.onViewAttachedToWindow(holder);
         //如果不显示底部布局
-        if(hasLoadMore()==false||getDataCount()>=getItemCount()||holder.getAdapterPosition()!=getItemCount()-1){
+        if(hasLoadMore()==false||getNotLoadViewCount()>=getItemCount()||holder.getAdapterPosition()!=getItemCount()-1){
             return;
         }
         ViewGroup.LayoutParams layoutParams = holder.itemView.getLayoutParams();
@@ -422,5 +422,7 @@ public abstract class LoadMoreAdapter<T> extends CustomAdapter<T> {
             sglm.setFullSpan(true);
         }
     }
-
+    public int getNotLoadViewCount(){
+        return getDataCount()+getHeaderCount()+getFooterCount();
+    }
 }
