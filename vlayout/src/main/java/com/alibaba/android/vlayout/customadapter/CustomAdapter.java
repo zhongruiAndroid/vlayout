@@ -165,7 +165,7 @@ public abstract class CustomAdapter<T> extends DelegateAdapter.Adapter<CustomVie
             if(tag==null){
                 return;
             }
-            if (tag != null && getDataCount() > 0) {
+            if (getDataCount() > 0) {
                 ViewGroup.LayoutParams layoutParams = (ViewGroup.LayoutParams) tag;
                 holder.itemView.setLayoutParams(layoutParams);
             } else {
