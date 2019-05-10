@@ -171,12 +171,14 @@ public abstract class CustomAdapter<T> extends DelegateAdapter.Adapter<CustomVie
             return;
         }
         if (mList == null || position >= mList.size()) {
-            bindData(holder, position, null);
+            bindData(holder,getDataPosition(position), null);
         } else {
-            bindData(holder, position, mList.get(position));
+            bindData(holder,getDataPosition(position),mList.get(getDataPosition(position)));
         }
     }
-
+    public int getDataPosition(int position){
+        return position - getHeaderCount();
+    }
     @Override
     public int getItemCount() {
         int otherSize = getLoadMoreViewCount() + getHeaderCount() + getFooterCount();
