@@ -176,15 +176,13 @@ public abstract class LoadMoreAdapter<T> extends CustomAdapter<T> {
         }
         super.onBindViewHolder(viewHolder,position);
     }
-    public int getDataCount(){
-        return super.getItemCount();
-    }
     @Override
     public int getItemCount() {
+        int size = getDataCount() + getHeaderCount() + getFooterCount();
         if((isHiddenPromptView&&noMore==status)||hasLoadMore()==false){
-            return super.getItemCount();
+            return size;
         }
-        return super.getItemCount()+1;
+        return size+1;
     }
 
     private boolean isLoadMoreView(int viewType){
@@ -267,13 +265,7 @@ public abstract class LoadMoreAdapter<T> extends CustomAdapter<T> {
         return textView;
     }
 
-    @Override
-    public int getLoadMoreViewCount() {
-        if((isHiddenPromptView&&noMore==status)||hasLoadMore()==false){
-            return 0;
-        }
-        return 1;
-    }
+
 
     private int dp2px(Context context, float dipValue) {
         final float scale = context.getResources().getDisplayMetrics().density;

@@ -184,17 +184,14 @@ public abstract class CustomAdapter<T> extends DelegateAdapter.Adapter<CustomVie
     }
     @Override
     public int getItemCount() {
-        int otherSize = getLoadMoreViewCount() + getHeaderCount() + getFooterCount();
-        return mList == null ? otherSize : mList.size() + otherSize;
+        int size = getDataCount()+ getHeaderCount() + getFooterCount();
+        return size;
     }
 
     public int getDataCount() {
         return mList == null ? 0 : mList.size();
     }
 
-    public int getLoadMoreViewCount() {
-        return 0;
-    }
 
     /*****************************headerView*******************************/
     public void addHeaderView(View view) {
@@ -296,7 +293,7 @@ public abstract class CustomAdapter<T> extends DelegateAdapter.Adapter<CustomVie
 
 
     public boolean isFooterViewPos(int position) {
-        if (position >= getHeaderCount() + getDataCount() && position < getItemCount() - getLoadMoreViewCount()) {
+        if (position >= getHeaderCount() + getDataCount() && position<(getDataCount()+ getHeaderCount() + getFooterCount())) {
             return true;
         } else {
             return false;
