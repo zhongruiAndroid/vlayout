@@ -269,7 +269,10 @@ public abstract class LoadMoreAdapter<T> extends CustomAdapter<T> {
 
     @Override
     public int getLoadMoreViewCount() {
-        return getItemCount()>getDataCount()?1:0;
+        if((isHiddenPromptView&&noMore==status)||hasLoadMore()==false){
+            return 0;
+        }
+        return 1;
     }
 
     private int dp2px(Context context, float dipValue) {
