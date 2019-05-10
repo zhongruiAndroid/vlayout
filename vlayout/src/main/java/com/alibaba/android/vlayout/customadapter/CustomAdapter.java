@@ -162,6 +162,9 @@ public abstract class CustomAdapter<T> extends DelegateAdapter.Adapter<CustomVie
     public void onBindViewHolder(@NonNull CustomViewHolder holder, int position) {
         if (isHeaderViewPos(position) || isFooterViewPos(position)) {
             Object tag = holder.itemView.getTag(R.id.tag_layout_params);
+            if(tag==null){
+                return;
+            }
             if (tag != null && getDataCount() > 0) {
                 ViewGroup.LayoutParams layoutParams = (ViewGroup.LayoutParams) tag;
                 holder.itemView.setLayoutParams(layoutParams);
