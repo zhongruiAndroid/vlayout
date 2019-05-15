@@ -168,7 +168,11 @@ public abstract class LoadMoreAdapter<T> extends CustomAdapter<T> {
     @Override
     public void onBindViewHolder(@NonNull CustomViewHolder viewHolder, int position) {
         if (getItemViewType(position)==load) {
-            loadMoreData();
+            if(getDataPosition(position)!=0){
+                //如果postion等于0，只有loadmoreview的时候,
+                // 防止adapter初始化还没真正设置数据时自动加载更多
+                loadMoreData();
+            }
             return;
         }
         if(isLoadMoreView(getItemViewType(position))){
