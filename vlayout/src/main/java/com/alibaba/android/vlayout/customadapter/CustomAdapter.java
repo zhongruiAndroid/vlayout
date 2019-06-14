@@ -83,6 +83,7 @@ public abstract class CustomAdapter<T> extends DelegateAdapter.Adapter<CustomVie
 
 
     public abstract void bindData(CustomViewHolder holder, int position, T item);
+    public void bindDataForNull(CustomViewHolder holder, int position){};
 
     public View getCustomView() {
         return null;
@@ -174,7 +175,7 @@ public abstract class CustomAdapter<T> extends DelegateAdapter.Adapter<CustomVie
             return;
         }
         if (mList == null || getDataPosition(position) >= mList.size()) {
-            bindData(holder,getDataPosition(position), null);
+            bindDataForNull(holder,getDataPosition(position));
         } else {
             bindData(holder,getDataPosition(position),mList.get(getDataPosition(position)));
         }
