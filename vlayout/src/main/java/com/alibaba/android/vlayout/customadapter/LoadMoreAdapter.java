@@ -305,6 +305,7 @@ public abstract class LoadMoreAdapter<T> extends CustomAdapter<T> {
         if(list==null||list.size()<pageSize){
             setStatus(noMore,false);
         }else{
+            setStatus(load,false);
             completeRequest();
         }
     }
